@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\Mart.EF.Core.props" />
+</Project>

@@ -1,0 +1,23 @@
+{
+  "Version": 1,
+  "Hash": "cxUEgWFQ/zIH1ZzCdEUvA/nLuE/x8Th+EWycmwBlCds=",
+  "Source": "Core.Mart.WebApi",
+  "BasePath": "_content/Core.Mart.WebApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [
+    {
+      "Identity": "E:\\GitHub\\Ma.rt-Core\\Mart\\Core.WebApi.EF\\Core.EF.csproj",
+      "Version": 2,
+      "Source": "Core.EF",
+      "GetPublishAssetsTargets": "ComputeReferencedStaticWebAssetsPublishManifest;GetCurrentProjectPublishStaticWebAssetItems",
+      "AdditionalPublishProperties": "Configuration=Debug;Platform=AnyCPU",
+      "AdditionalPublishPropertiesToRemove": "WebPublishProfileFile;TargetFramework",
+      "GetBuildAssetsTargets": "GetCurrentProjectBuildStaticWebAssetItems",
+      "AdditionalBuildProperties": "Configuration=Debug;Platform=AnyCPU",
+      "AdditionalBuildPropertiesToRemove": "WebPublishProfileFile;TargetFramework"
+    }
+  ],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

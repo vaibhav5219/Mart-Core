@@ -1,0 +1,7 @@
+E:\GitHub\Ma.rt-Core\Mart\Core.WebApi.Mart\obj\Debug\net6.0\Core.WebApi.Mart.csproj.AssemblyReference.cache
+E:\GitHub\Ma.rt-Core\Mart\Core.WebApi.Mart\obj\Debug\net6.0\Core.WebApi.Mart.GeneratedMSBuildEditorConfig.editorconfig
+E:\GitHub\Ma.rt-Core\Mart\Core.WebApi.Mart\obj\Debug\net6.0\Core.WebApi.Mart.AssemblyInfoInputs.cache
+E:\GitHub\Ma.rt-Core\Mart\Core.WebApi.Mart\obj\Debug\net6.0\Core.WebApi.Mart.AssemblyInfo.cs
+E:\GitHub\Ma.rt-Core\Mart\Core.WebApi.Mart\obj\Debug\net6.0\Core.WebApi.Mart.csproj.CoreCompileInputs.cache
+E:\GitHub\Ma.rt-Core\Mart\Core.WebApi.Mart\obj\Debug\net6.0\Core.WebApi.Mart.MvcApplicationPartsAssemblyInfo.cs
+E:\GitHub\Ma.rt-Core\Mart\Core.WebApi.Mart\obj\Debug\net6.0\Core.WebApi.Mart.MvcApplicationPartsAssemblyInfo.cache
