@@ -66,32 +66,40 @@ namespace Core.Mart.WebApi.Controllers
                 SecurityStamp = Guid.NewGuid().ToString(),
                 UserName = model.Email
             };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
-
-
-            if (model.isShopkeeper == true)
+            try
             {
-                if (!await _roleManager.RoleExistsAsync(UserRoles.IsACustomer))  // Agar ye role nhi hai database me to create kr dega
-                    await _roleManager.CreateAsync(new IdentityRole(UserRoles.IsACustomer));
 
-                if (await _roleManager.RoleExistsAsync(UserRoles.IsACustomer))
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (!result.Succeeded)
+                    return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+
+
+                if (model.isShopkeeper == true)
                 {
-                    await _userManager.AddToRoleAsync(user, UserRoles.IsACustomer);
+                    if (!await _roleManager.RoleExistsAsync(UserRoles.IsACustomer))  // Agar ye role nhi hai database me to create kr dega
+                        await _roleManager.CreateAsync(new IdentityRole(UserRoles.IsACustomer));
+
+                    if (await _roleManager.RoleExistsAsync(UserRoles.IsACustomer))
+                    {
+                        await _userManager.AddToRoleAsync(user, UserRoles.IsACustomer);
+                    }
                 }
+                else
+                {
+                    if (await _roleManager.RoleExistsAsync(UserRoles.IsAShop))
+                    {
+                        await _userManager.AddToRoleAsync(user, UserRoles.IsAShop);
+                    }
+                }
+
+                return Ok(new Response { Status = "Success", Message = "User created successfully!" });
             }
-            else
+            catch (Exception ex)
             {
-                if (await _roleManager.RoleExistsAsync(UserRoles.IsAShop))
-                {
-                    await _userManager.AddToRoleAsync(user, UserRoles.IsAShop);
-                }
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
-
-            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
 
         [HttpPost]
