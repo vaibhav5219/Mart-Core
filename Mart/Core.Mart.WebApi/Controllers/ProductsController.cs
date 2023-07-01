@@ -3,6 +3,7 @@ using Core.Mart.WebApi.ModelView;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Net;
 using System.Security.Claims;
 
@@ -147,6 +148,14 @@ namespace Core.Mart.WebApi.Controllers
         private bool ProductExists(int id)
         {
             return db.Products.Count(e => e.ProductId == id) > 0;
+        }
+
+        [HttpGet]
+        [Route("GetProductsList")]
+        public async Task<IActionResult> GetProductsList()
+        {
+            List<Product> products = await db.Products.ToListAsync();
+            return Ok(products);
         }
     }
 }
