@@ -37,6 +37,8 @@ public partial class CartDbcoreContext : DbContext
 
     public virtual DbSet<Order> Orders { get; set; }
 
+    public virtual DbSet<OrderDetail> OrderDetails { get; set; }
+
     public virtual DbSet<OrderStatusTbl> OrderStatusTbls { get; set; }
 
     public virtual DbSet<Product> Products { get; set; }
@@ -185,27 +187,27 @@ public partial class CartDbcoreContext : DbContext
         {
             entity.ToTable("Order");
 
-            entity.Property(e => e.OrderId).HasColumnName("Order_Id");
-            entity.Property(e => e.CustomerId)
-                .HasMaxLength(50)
-                .HasColumnName("Customer_Id");
-            entity.Property(e => e.DeliveredDate)
-                .HasColumnType("date")
-                .HasColumnName("Delivered_Date");
-            entity.Property(e => e.OrderDate)
-                .HasColumnType("datetime")
-                .HasColumnName("Order_Date");
-            entity.Property(e => e.OrderQuantity).HasColumnName("Order_Quantity");
-            entity.Property(e => e.OrderStatus).HasColumnName("Order_Status");
-            entity.Property(e => e.OrderTotal).HasColumnName("Order_Total");
-            entity.Property(e => e.ProductId).HasColumnName("Product_Id");
-            entity.Property(e => e.ShopCode)
-                .HasMaxLength(50)
-                .HasColumnName("Shop_Code");
+            entity.Property(e => e.OrderId).HasColumnName("OrderID");
+            entity.Property(e => e.CustomerId).HasColumnName("CustomerID");
+            entity.Property(e => e.DeliveredDate).HasColumnType("datetime");
+            entity.Property(e => e.OrderDate).HasColumnType("datetime");
+            entity.Property(e => e.OutForDeliveryDate).HasColumnType("datetime");
+            entity.Property(e => e.PaymentDate).HasColumnType("datetime");
+            entity.Property(e => e.PaymentId).HasColumnName("PaymentID");
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.RefundId).HasColumnName("RefundID");
+            entity.Property(e => e.RequiredDate).HasColumnType("datetime");
+            entity.Property(e => e.ShipDate).HasColumnType("datetime");
+            entity.Property(e => e.ShipperId).HasColumnName("ShipperID");
+            entity.Property(e => e.ShopCode).HasMaxLength(50);
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Order__CustomerI__3F115E1A");
 
             entity.HasOne(d => d.Product).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Order_Product_ID");
 
             entity.HasOne(d => d.ShopCodeNavigation).WithMany(p => p.Orders)
@@ -213,6 +215,19 @@ public partial class CartDbcoreContext : DbContext
                 .HasForeignKey(d => d.ShopCode)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Order_ShopDetails");
+        });
+
+        modelBuilder.Entity<OrderDetail>(entity =>
+        {
+            entity.HasKey(e => e.OrderDetailsId);
+
+            entity.Property(e => e.OrderDetailsId).HasColumnName("OrderDetailsID");
+            entity.Property(e => e.CustomerId).HasColumnName("CustomerID");
+            entity.Property(e => e.Discount)
+                .HasMaxLength(10)
+                .IsFixedLength();
+            entity.Property(e => e.OrderId).HasColumnName("OrderID");
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
         });
 
         modelBuilder.Entity<OrderStatusTbl>(entity =>

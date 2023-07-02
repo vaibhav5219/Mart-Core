@@ -1,4 +1,5 @@
 ﻿using Core.EF.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -7,8 +8,11 @@ namespace Core.Mart.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ValuesController : ControllerBase
     {
+        [Route("GetCategories")]
+        [HttpGet]
         public IEnumerable<Category> Get()
         {
             using (CartDbcoreContext enteties = new CartDbcoreContext())

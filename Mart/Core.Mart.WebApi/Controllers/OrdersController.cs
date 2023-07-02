@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Security.Claims;
+using Core.Mart.WebApi.ModelView;
 
 namespace Core.Mart.WebApi.Controllers
 {
@@ -22,10 +23,7 @@ namespace Core.Mart.WebApi.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ShopDetail shopDetail = db.ShopDetails.FirstOrDefault(u => u.AspNetUsersId == userId);
 
-            return db.Orders.Where(u => u.ShopCode == shopDetail.ShopCode
-                                   && u.OrderStatus != 5
-                                   && u.OrderStatus != 4
-                                   && u.OrderStatus != 3);
+            return db.Orders.Where(u => u.ShopCode == shopDetail.ShopCode);
         }
 
         // GET: api/Orders/5
@@ -85,41 +83,95 @@ namespace Core.Mart.WebApi.Controllers
         // POST: api/Orders  
         [Authorize(Roles = "IsACustomer")]
         [Route("PlaceOrder")]
-        public async Task<IActionResult> PostOrder(Order order = null)
+        public async Task<IActionResult> PostOrder(List<OrderModel> items)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            ShopDetail shopDetail = db.ShopDetails.FirstOrDefault(u => u.ShopCode == order.ShopCode);
-            Customer customer = db.Customers.SingleOrDefault(c => c.AspNetUserId == userId);
-
-            // We can remove the Item from cart
-            // Then Change Order_Status
-            //   Order_Status = 1 => Order Placed
-            //   Order_Status = 2 => Order Confirmed By Shop Keeper
-            //   Order_Status = 3 => Onthe Way
-            //   Order_Status = 4 => Delivered
-            //   Order_Status = 5 => Cancled
-
-            List<OrderStatusTbl> orderStatus_Tbl = db.OrderStatusTbls.ToList();
-
-            Order order1 = new Order()
+            //var orders = new List<OrderModel>();
+            try
             {
-                OrderDate = DateTime.Now,
-                OrderStatus = orderStatus_Tbl[0].OrderStatusId,     //    Order Placed => 1
-                OrderTotal = order.OrderTotal,
-                CustomerId = customer.AspNetUserId,
-                ProductId = order.ProductId,
-                ShopCode = order.ShopCode,
-            };
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
 
-            db.Orders.Add(order);
-            await db.SaveChangesAsync();
+                Customer customer = db.Customers.SingleOrDefault(c => c.AspNetUserId == userId);
+                if (customer == null)
+                {
+                    return StatusCode(StatusCodes.Status303SeeOther);
+                }
 
-            return CreatedAtRoute("DefaultApi", new { id = order.OrderId }, order);
+                // Does product exists
+                var IsProductExists = false;
+                foreach (var item in items)
+                {
+                    using (CartDbcoreContext db = new CartDbcoreContext())
+                    {
+                        if (db.Products.Count(e => e.ProductId == item.ProductId) < 0)
+                        {
+                            return StatusCode(StatusCodes.Status500InternalServerError);
+                        }
+                    }
+                }
+
+                // Place order in order table
+                foreach (var order in items)
+                {
+                    //ShopDetail shopDetail = db.ShopDetails.FirstOrDefault(u => u.ShopCode == order.ShopCode);
+                    var productUnitPrice = db.Products.SingleOrDefault(c => c.ProductId == order.ProductId).UnitPrice;
+
+                    List<OrderStatusTbl> orderStatus_Tbl = db.OrderStatusTbls.ToList();
+
+                    var guid = Guid.NewGuid().ToString();
+                    Order order1 = new Order()
+                    {
+                        //OrderStatus = orderStatus_Tbl[0].OrderStatusId,     //    Order Placed => 1
+                        CustomerId = customer.CustomerId,
+                        ProductId = order.ProductId,
+                        ShopCode = order.ShopCode,
+                        OrderDate = DateTime.Now,
+                        //  1 product ka price X it's quantity
+                        OrderTotal = Convert.ToInt32(order.Quantity * productUnitPrice), 
+                        OrderQuantity = order.Quantity,
+                        // uniq identifier, unique order number
+                        OrderNumber = guid,
+                        PaymentId = null,
+                        ShipDate = null,
+                        RequiredDate = null,
+                        ShipperId = null,
+                        Freight = null,
+                        SalesTax = null,
+                        TransactStatus = null,
+                        IsCancled = false,
+                        Paid = null,
+                        PaymentDate = null,
+                        IsOrderConfimed = false,
+                        IsShipped = null,
+                        IsOutForDelivery = null,
+                        IsDelivered = null,
+                        OutForDeliveryDate = null,
+                        DeliveredDate = null,
+                        RefundId = null,
+                    };
+
+                    db.Orders.Add(order1);
+                    await db.SaveChangesAsync();
+
+                    // Add Order Details for this order
+                    //OrderDetail orderDetail = new OrderDetail()
+                    //{
+                          //   No Use of now
+                    //}
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         // DELETE: api/Orders/5  =>  Cancel Order
@@ -136,7 +188,6 @@ namespace Core.Mart.WebApi.Controllers
             }
             List<OrderStatusTbl> orderStatus_Tbl = db.OrderStatusTbls.ToList();
 
-            order.OrderStatus = orderStatus_Tbl[4].OrderStatusId;
 
             //db.Orders.Remove(order);
             await db.SaveChangesAsync();
@@ -156,7 +207,6 @@ namespace Core.Mart.WebApi.Controllers
             {
                 return NotFound();
             }
-            order.OrderStatus = 2;
 
             //db.Orders.Remove(order);
             await db.SaveChangesAsync();
@@ -176,7 +226,6 @@ namespace Core.Mart.WebApi.Controllers
             {
                 return NotFound();
             }
-            order.OrderStatus = 3;
 
             //db.Orders.Remove(order);
             await db.SaveChangesAsync();
@@ -200,7 +249,7 @@ namespace Core.Mart.WebApi.Controllers
             List<OrderStatusTbl> orderStatus_Tbl = db.OrderStatusTbls.ToList();
 
             order.DeliveredDate = DateTime.Now;
-            order.OrderStatus = orderStatus_Tbl[3].OrderStatusId;    // Order Delivered  => 4
+            //order.OrderStatus = orderStatus_Tbl[3].OrderStatusId;    // Order Delivered  => 4
 
             //db.Orders.Remove(order);
             await db.SaveChangesAsync();

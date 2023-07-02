@@ -33,7 +33,7 @@ namespace Core.Mart.WebApi.Controllers
 
                 var authClaims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(ClaimTypes.NameIdentifier, user.UserName),        //new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
 
@@ -76,7 +76,7 @@ namespace Core.Mart.WebApi.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
 
 
-                if (model.isShopkeeper == true)
+                if (model.isShopkeeper == false)
                 {
                     if (!await _roleManager.RoleExistsAsync(UserRoles.IsACustomer))  // Agar ye role nhi hai database me to create kr dega
                         await _roleManager.CreateAsync(new IdentityRole(UserRoles.IsACustomer));

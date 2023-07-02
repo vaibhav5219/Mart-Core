@@ -154,8 +154,26 @@ namespace Core.Mart.WebApi.Controllers
         [Route("GetProductsList")]
         public async Task<IActionResult> GetProductsList()
         {
-            List<Product> products = await db.Products.ToListAsync();
-            return Ok(products);
+            List<Product> products = await db.Products.Include(a => a.Category).ToListAsync();
+
+            List<GetProductsModelView> getProductsModelView = new List<GetProductsModelView>();
+
+            foreach(var product in products)
+            {
+                GetProductsModelView getProductsModelView1 = new GetProductsModelView()
+                {
+                    ProductId = product.ProductId,
+                    ProductName = product.ProductName,
+                    Description = product.Description,
+                    ImagePath = product.ImagePath,
+                    UnitPrice = Convert.ToSingle(product.UnitPrice),
+                    CategoryID = product.CategoryId,
+                };
+
+                getProductsModelView.Add(getProductsModelView1);
+            }
+
+            return Ok(getProductsModelView);
         }
     }
 }

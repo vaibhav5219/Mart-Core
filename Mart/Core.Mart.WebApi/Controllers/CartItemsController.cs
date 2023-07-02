@@ -80,7 +80,7 @@ namespace Core.Mart.WebApi.Controllers
         //}
 
         // POST: api/CartItems  =>  Add to cart
-        [Authorize(Roles = "IsACustomer")]
+        //[Authorize(Roles = "IsACustomer")]
         [Route("AddToCart")]
         public async Task<IActionResult> PostCartItem(CartItem cartItem)
         {
