@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Net;
 using Core.EF.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Core.Mart.WebApi.ModelView;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 
 namespace Core.Mart.WebApi.Controllers
 {
@@ -57,10 +60,11 @@ namespace Core.Mart.WebApi.Controllers
             try
             {
                 await db.SaveChangesAsync();
+                return Ok(customer);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!CustomerExists(id))
+                if (true)
                 {
                     return NotFound();
                 }
@@ -74,14 +78,40 @@ namespace Core.Mart.WebApi.Controllers
         }
 
         //POST: api/Customers
-        public async Task<IActionResult> PostCustomer(Customer customer)
+        [Authorize(Roles = UserRoles.IsACustomer)]
+        [Route("CreateCustomer")]
+        public async Task<IActionResult> PostCustomer(CustomerModel customer)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            db.Customers.Add(customer);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var UserObj = db.AspNetUsers.FirstOrDefault(a => a.UserName == userId);
+            
+            if(UserObj == null || UserObj.Email == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            Customer IsCustomerExist = db.Customers.FirstOrDefault(a=> a.AspNetUserId == userId);
+            if(IsCustomerExist != null)
+            {
+                return Ok(IsCustomerExist);
+            }
+
+            Customer customer1 = new Customer()
+            {
+                CustomerName = customer.CustomerName,
+                Mobile = customer.Mobile,
+                Email = UserObj.Email,
+                UserName = customer.UserName,
+                Address = customer.Address,
+                AspNetUserId = UserObj.Id,
+            };
+
+            db.Customers.Add(customer1);
 
             try
             {
@@ -89,17 +119,16 @@ namespace Core.Mart.WebApi.Controllers
             }
             catch (DbUpdateException)
             {
-                if (CustomerExists(customer.CustomerId))
+                if (true)
                 {
                     return Conflict();
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(StatusCodes.Status500InternalServerError);    //throw;
                 }
             }
-
-            return CreatedAtRoute("DefaultApi", new { id = customer.CustomerId }, customer);
+            return Ok(customer1);
         }
 
         // DELETE: api/Customers/5
@@ -118,10 +147,30 @@ namespace Core.Mart.WebApi.Controllers
         //    return Ok(customer);
         //}
 
+        [Authorize(Roles = UserRoles.IsACustomer)]
         [Route("IsCustomerExists")]
-        private bool CustomerExists(int id)
+        [HttpGet]
+        public IActionResult CustomerExists()
         {
-            return db.Customers.Count(e => e.CustomerId == id) > 0;
+            try
+            {
+                var username = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var UserObj = db.AspNetUsers.FirstOrDefault(a => a.UserName == username);
+
+                if (UserObj == null || UserObj.Email == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+                var customer = db.Customers.FirstOrDefault(a => a.AspNetUserId == UserObj.Id);
+                return Ok(new
+                {
+                    IsCustomerRegistered = customer != null ? true : false
+                });
+            }
+            catch(DbUpdateException) 
+            {
+                return BadRequest();
+            }
         }
     }
 }

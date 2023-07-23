@@ -98,7 +98,14 @@ namespace Core.Mart.WebApi.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError);
                 }
 
-                Customer customer = db.Customers.SingleOrDefault(c => c.AspNetUserId == userId);
+                var UserObj = db.AspNetUsers.FirstOrDefault(a => a.UserName == userId);
+
+                if (UserObj == null || UserObj.Email == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+
+                Customer customer = db.Customers.SingleOrDefault(c => c.AspNetUserId == UserObj.Id);
                 if (customer == null)
                 {
                     return StatusCode(StatusCodes.Status303SeeOther);

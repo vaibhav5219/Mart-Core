@@ -1,7 +1,10 @@
 ﻿using Core.EF.Models;
+using Core.Mart.WebApi.ModelView;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using System.Net;
 using System.Security.Claims;
 
@@ -63,7 +66,7 @@ namespace Core.Mart.WebApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ShopDetailExists(id))
+                if (true)
                 {
                     return NotFound();
                 }
@@ -78,33 +81,61 @@ namespace Core.Mart.WebApi.Controllers
 
         // POST: api/ShopDetails
         //[ResponseType(typeof(ShopDetail))]
-        //public async Task<IHttpActionResult> PostShopDetail(ShopDetail shopDetail)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
+        [HttpPost]
+        [Route("CreateShop")]
+        [Authorize(Roles = UserRoles.IsAShop)]
+        public async Task<IActionResult> PostShopDetail(ShopDetailsModel shopDetail)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        //    db.ShopDetails.Add(shopDetail);
+            try
+            {
+                var username = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var UserObj = await db.AspNetUsers.FirstOrDefaultAsync(a => a.UserName == username);
 
-        //    try
-        //    {
-        //        await db.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateException)
-        //    {
-        //        if (ShopDetailExists(shopDetail.Shop_Id))
-        //        {
-        //            return Conflict();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
+                if (UserObj == null || UserObj.Email == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
 
-        //    return CreatedAtRoute("DefaultApi", new { id = shopDetail.Shop_Id }, shopDetail);
-        //}
+                ShopDetail shopDetail1 = new ShopDetail()
+                {
+                    ShopId = Guid.NewGuid().ToString(),
+                    ShopCode = shopDetail.ShopCode,
+                    ShopName = shopDetail.ShopName,
+                    ShopDomainName = shopDetail.ShopDomainName,
+                    ShopKeeperName = shopDetail.ShopKeeperName,
+                    Mobile = shopDetail.Mobile,
+                    Address = shopDetail.Address,
+                    PinCode = shopDetail.PinCode,
+                    AspNetUsersId = UserObj.Id
+                };
+
+                db.ShopDetails.Add(shopDetail1);
+
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                if (true)
+                {
+                    return Conflict();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return Ok(new Response() 
+            {
+                Status = "200",
+                Message="Shop has been successfully created"
+            });
+            //return CreatedAtRoute("DefaultApi", new { id = shopDetail.ShopId }, shopDetail);
+        }
 
         // DELETE: api/ShopDetails/5
         //[ResponseType(typeof(ShopDetail))]
@@ -121,10 +152,29 @@ namespace Core.Mart.WebApi.Controllers
 
         //    return Ok(shopDetail);
         //}
+        //[Route("IsShopExists")]
+        //private bool ShopDetailExists(string id)
+        //{
+        //    return db.ShopDetails.Count(e => e.ShopId == id) > 0;
+        //}
+
+        [Authorize(Roles = UserRoles.IsAShop)]
         [Route("IsShopExists")]
-        private bool ShopDetailExists(string id)
+        [HttpGet]
+        public async Task<IActionResult> ShopDetailExists()
         {
-            return db.ShopDetails.Count(e => e.ShopId == id) > 0;
+            var username = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var UserObj = await db.AspNetUsers.FirstOrDefaultAsync(a => a.UserName == username);
+
+            if (UserObj == null || UserObj.Email == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            var customer = db.ShopDetails.FirstOrDefault(a => a.AspNetUsersId == UserObj.Id);
+            return Ok(new
+            {
+                IsShopRegistered = customer != null ? true : false
+            });
         }
     }
 }

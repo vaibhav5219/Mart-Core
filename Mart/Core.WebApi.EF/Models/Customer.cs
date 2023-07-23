@@ -17,7 +17,7 @@ public partial class Customer
 
     public int? Address { get; set; }
 
-    public string AspNetUserId { get; set; } = null!;
+    public string? AspNetUserId { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

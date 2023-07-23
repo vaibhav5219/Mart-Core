@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Core.EF.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,9 @@ namespace Core.Mart.WebApi.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
+
+        private CartDbcoreContext db = new CartDbcoreContext();
+
         public AccountController( UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager,IConfiguration configuration)
         {
             _userManager = userManager;
@@ -44,10 +48,44 @@ namespace Core.Mart.WebApi.Controllers
 
                 var token = GetToken(authClaims);
 
+                // if this ASPNETUSER has a customer in table 
+                //var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                //var UserObj = db.AspNetUsers.FirstOrDefault(a => a.UserName == userId);
+
+                //if (UserObj != null && UserObj.Email != null)
+                //{
+                //    var CustomerObj = db.Customers.FirstOrDefault(a => a.AspNetUserId == UserObj.Id);
+                //    if (CustomerObj != null && CustomerObj.Email != null)
+                //    {
+                //        return Ok(new
+                //        {
+                //            token = new JwtSecurityTokenHandler().WriteToken(token),
+                //            expiration = token.ValidTo,
+                //            loggedInAs = userRoles == null ? "0" : userRoles[0],
+                //            AsCustomerRegister = true,
+                //            AsShopRegister = false
+                //        });
+                //    }
+
+                //    var ShopObj = db.AspNetUsers.FirstOrDefault(a => a.UserName == userId);
+
+                //    if (ShopObj != null && ShopObj.Email != null)
+                //    {
+                //        return Ok(new
+                //        {
+                //            token = new JwtSecurityTokenHandler().WriteToken(token),
+                //            expiration = token.ValidTo,
+                //            loggedInAs = userRoles == null ? "0" : userRoles[0],
+                //            AsCustomerRegister = false,
+                //            AsShopRegister = true
+                //        });
+                //    }
+                //}
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
+                    expiration = token.ValidTo,
+                    loggedInAs = userRoles == null ? "0" : userRoles[0]
                 });
             }
             return Unauthorized();
@@ -68,8 +106,6 @@ namespace Core.Mart.WebApi.Controllers
             };
             try
             {
-
-
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (!result.Succeeded)
@@ -88,6 +124,9 @@ namespace Core.Mart.WebApi.Controllers
                 }
                 else
                 {
+                    if (!await _roleManager.RoleExistsAsync(UserRoles.IsAShop))  // Agar ye role nhi hai database me to create kr dega
+                        await _roleManager.CreateAsync(new IdentityRole(UserRoles.IsAShop));
+
                     if (await _roleManager.RoleExistsAsync(UserRoles.IsAShop))
                     {
                         await _userManager.AddToRoleAsync(user, UserRoles.IsAShop);

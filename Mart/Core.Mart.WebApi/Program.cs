@@ -73,3 +73,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Scafolding command
+//
+//Scaffold-DbContext "Server=DESKTOP-9C0AVE1\SQLEXPRESS;database=cartDB;uid=sa;password=Vaibhav123@;TrustServerCertificate=True" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
