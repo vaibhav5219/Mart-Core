@@ -1,8 +1,10 @@
 ﻿using Core.EF.Models;
 using Core.Mart.WebApi.ModelView;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -83,6 +85,7 @@ namespace Core.Mart.WebApi.Controllers
         // POST:  api/Products/SetProduct
         [HttpPost]
         [Route("SetProduct")]
+        [Authorize(Roles = UserRoles.IsAShop)]
         public async Task<IActionResult> PostProduct(SetProductViewModel setProductViewModel)
         {
             if (!ModelState.IsValid)
@@ -103,11 +106,10 @@ namespace Core.Mart.WebApi.Controllers
                     ShopDetail shopDetail = enteties.ShopDetails.FirstOrDefault(u => u.AspNetUsersId == userId);
                     Product product = new Product()
                     {
-                        ProductName = setProductViewModel.Product.ProductName,
-                        Description = setProductViewModel.Product.Description,
-                        ImagePath = setProductViewModel.Product.ImagePath,      // Need to more work on it
-                        UnitPrice = setProductViewModel.Product.UnitPrice,
-                        //ShopCode = setProductViewModel.ShopCode,
+                        ProductName = setProductViewModel.ProductName,
+                        Description = setProductViewModel.Description,
+                        ImagePath = setProductViewModel.ImagePath,      // Need to more work on it
+                        UnitPrice = setProductViewModel.UnitPrice,
                         ShopCode = shopDetail.ShopCode
                     };
 
