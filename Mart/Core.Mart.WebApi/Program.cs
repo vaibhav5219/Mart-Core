@@ -1,3 +1,4 @@
+using Core.EF.Models;
 using Core.Mart.WebApi.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -51,6 +52,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<IdentityOptions>(options => options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier);
+
+// Add Dependency Injection using AddScoped
+builder.Services.AddScoped<CartDbcoreContext, CartDbcoreContext>();
 
 var app = builder.Build();
 

@@ -11,7 +11,13 @@ namespace Core.Mart.WebApi.Controllers
     [ApiController]
     public class AddressController : ControllerBase
     {
-        private CartDbcoreContext db = new CartDbcoreContext();
+        private CartDbcoreContext db = null;
+
+        // Constructor Injection
+        public AddressController(CartDbcoreContext _cartDbcoreContext)
+        {
+            db = _cartDbcoreContext;
+        }
 
         // GET: api/Addresses
         //public IQueryable<Address> GetAddresses()

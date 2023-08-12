@@ -15,7 +15,14 @@ namespace Core.Mart.WebApi.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private CartDbcoreContext db = new CartDbcoreContext();
+        // Propertie
+        private CartDbcoreContext db = null;
+
+        // Constructor Injection
+        public ProductsController(CartDbcoreContext _cartDbcoreContext)
+        {
+            db = _cartDbcoreContext;
+        }
 
         // GET: api/Products
         // GET api/Products/GetProducts
