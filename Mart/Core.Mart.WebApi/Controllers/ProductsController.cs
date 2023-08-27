@@ -100,31 +100,44 @@ namespace Core.Mart.WebApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            //db.Products.Add(product);
-            //await db.SaveChangesAsync();
-            //return CreatedAtRoute("DefaultApi", new { id = product.ProductID }, product);
-
             using (CartDbcoreContext enteties = new CartDbcoreContext())
             {
                 try
                 {
-                    //enteties.Configuration.ProxyCreationEnabled = false;
-                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    ShopDetail shopDetail = enteties.ShopDetails.FirstOrDefault(u => u.AspNetUsersId == userId);
+                    var userName = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var userObj = enteties.AspNetUsers.FirstOrDefault(u => u.Email == userName);
+                    if (userObj == null)
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User doesn't exists!" });
+                    }
+
+                    ShopDetail shopDetail = enteties.ShopDetails.FirstOrDefault(u => u.AspNetUsersId == userObj.Id);
+
+                    if(shopDetail == null)
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Shop does not exists!" });
+                    }
+                    int? categoryId = db.Categories.FirstOrDefault(c => c.CategoryName == setProductViewModel.CategoryName).CategoryId;
+                    if (categoryId == null)
+                    {
+                        return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Category does not exists!" });
+                    }
+
                     Product product = new Product()
                     {
                         ProductName = setProductViewModel.ProductName,
                         Description = setProductViewModel.Description,
                         ImagePath = setProductViewModel.ImagePath,      // Need to more work on it
                         UnitPrice = setProductViewModel.UnitPrice,
-                        ShopCode = shopDetail.ShopCode
+                        ShopCode = shopDetail.ShopCode,
+                        CategoryId = categoryId
                     };
 
                     enteties.Products.Add(product);
                     await enteties.SaveChangesAsync();
 
-                    return CreatedAtRoute("DefaultApi", new { id = product.ProductId }, product);
-                    //return Ok();
+                    //return CreatedAtRoute("DefaultApi", new { id = product.ProductId }, product);
+                    return Ok();
                 }
                 catch (Exception ex)
                 {
@@ -177,6 +190,7 @@ namespace Core.Mart.WebApi.Controllers
                     ImagePath = product.ImagePath,
                     UnitPrice = Convert.ToSingle(product.UnitPrice),
                     CategoryID = product.CategoryId,
+                    ShopCode = product.ShopCode == null ? "" : product.ShopCode
                 };
 
                 getProductsModelView.Add(getProductsModelView1);

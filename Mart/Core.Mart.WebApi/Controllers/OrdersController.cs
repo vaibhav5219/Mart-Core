@@ -123,6 +123,8 @@ namespace Core.Mart.WebApi.Controllers
                         }
                     }
                 }
+                ShopDetail shopDetail = db.ShopDetails.FirstOrDefault(u => u.AspNetUsersId == UserObj.Id);
+
 
                 // Place order in order table
                 foreach (var order in items)
@@ -135,6 +137,7 @@ namespace Core.Mart.WebApi.Controllers
                     var guid = Guid.NewGuid().ToString();
                     Order order1 = new Order()
                     {
+
                         //OrderStatus = orderStatus_Tbl[0].OrderStatusId,     //    Order Placed => 1
                         CustomerId = customer.CustomerId,
                         ProductId = order.ProductId,

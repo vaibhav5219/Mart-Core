@@ -1,4 +1,5 @@
 using Core.EF.Models;
+using Core.Mart.WebApi;
 using Core.Mart.WebApi.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -58,6 +59,9 @@ builder.Services.AddScoped<CartDbcoreContext, CartDbcoreContext>();
 
 var app = builder.Build();
 
+// Register middleware or Plug into the pipeline
+app.UseMiddleware<CustomAuthentication>();
+
 // app CORS
 app.UseCors();
 
@@ -70,8 +74,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); // First call it
+app.UseAuthorization();  // Then it
 
 
 app.MapControllers();
