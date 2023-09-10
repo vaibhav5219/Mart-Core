@@ -60,7 +60,7 @@ builder.Services.AddScoped<CartDbcoreContext, CartDbcoreContext>();
 var app = builder.Build();
 
 // Register middleware or Plug into the pipeline
-app.UseMiddleware<CustomAuthentication>();
+//app.UseMiddleware<CustomAuthentication>();
 
 // app CORS
 app.UseCors();

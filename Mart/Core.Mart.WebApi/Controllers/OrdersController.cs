@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Security.Claims;
 using Core.Mart.WebApi.ModelView;
+using Microsoft.EntityFrameworkCore;
 
 namespace Core.Mart.WebApi.Controllers
 {
@@ -24,6 +25,51 @@ namespace Core.Mart.WebApi.Controllers
             ShopDetail shopDetail = db.ShopDetails.FirstOrDefault(u => u.AspNetUsersId == userId);
 
             return db.Orders.Where(u => u.ShopCode == shopDetail.ShopCode);
+        }
+
+        [HttpGet]
+        [Route("GetCustomerOrders")]
+        [Authorize(Roles = UserRoles.IsACustomer)]
+        public async Task<IActionResult> GetCustomerOrders()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+
+                var UserObj = db.AspNetUsers.FirstOrDefault(a => a.UserName == userId);
+
+                if (UserObj == null || UserObj.Email == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+
+                Customer customer = db.Customers.SingleOrDefault(c => c.AspNetUserId == UserObj.Id);
+                if (customer == null)
+                {
+                    return StatusCode(StatusCodes.Status303SeeOther);
+                }
+
+                var orders = await db.Orders
+                    .Include(o => o.Product)
+                    .Where(o => o.CustomerId == customer.CustomerId)
+                    .Select(o => new { o.OrderId, o.OrderNumber, o.OrderDate, o.CustomerId, o.ShopCode, o.PaymentId, o.ShipDate,
+                                        o.RequiredDate, o.ShipperId, o.Freight, o.SalesTax, o.TransactStatus, o.IsCancled, o.Paid,
+                                        o.PaymentDate, o.IsOrderConfimed, o.IsShipped, o.IsOutForDelivery, o.IsDelivered, o.OutForDeliveryDate,
+                                        o.DeliveredDate, o.RefundId, o.OrderQuantity, o.Product.ProductName, o.Product.UnitPrice, o.Product.ImagePath
+                    })
+                    .ToListAsync();
+
+                return Ok(orders);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
         }
 
         // GET: api/Orders/5
@@ -125,6 +171,7 @@ namespace Core.Mart.WebApi.Controllers
                 }
                 ShopDetail shopDetail = db.ShopDetails.FirstOrDefault(u => u.AspNetUsersId == UserObj.Id);
 
+                List<string> OrderList = new List<string>();
 
                 // Place order in order table
                 foreach (var order in items)
@@ -170,13 +217,15 @@ namespace Core.Mart.WebApi.Controllers
                     db.Orders.Add(order1);
                     await db.SaveChangesAsync();
 
+                    OrderList.Add(order1.OrderNumber);
+
                     // Add Order Details for this order
                     //OrderDetail orderDetail = new OrderDetail()
                     //{
                           //   No Use of now
                     //}
                 }
-                return Ok();
+                return Ok(OrderList);
             }
             catch (Exception ex)
             {
